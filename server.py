@@ -11,18 +11,18 @@ counter = 0
 
 # right now just making username tracker a list for ease, will eventually need to be
 # a dictionary also tracking logged in status and address
-users = []
+users = {}
 
 
 # thread function
-def threaded(c):
+def threaded(c, addr):
+	print(addr)
 	global counter
 
 	getUsername = c.recv(1024)
 	getUsername = getUsername.decode("ascii")
 	if getUsername not in users:
-		users.append(getUsername)
-		print(users)
+		users[getUsername] = c
 	
 	while True:
 
@@ -30,22 +30,32 @@ def threaded(c):
 		data = c.recv(1024)
 		if not data:
 			print('Bye')
-			# lock released on exit
-			# THIS IS PROBLEMATIC, YOU CAN'T EVEN GET MULTIPLE CONNECTIONS
-			print_lock.release()
+
+			# alter dictionary so IP set to 0
+			users[getUsername] = 0
 			break
+		else:
+			print_lock.acquire()
+			wire = data.decode('ascii')
 
-		msg = data.decode('ascii')
-		print(msg)
-		msg = msg[::-1]
-		msg += ', ' + str(counter)
+			# code for processing wire protocol should go here
+			wire = wire.split("|")
+			print(wire)
+			recipient = wire[0]
+			msg = wire[1]
 
-		# reverse the given string from client
-		data = msg.encode('ascii')
+			# after processing, direct arguments to the right function
 
-		# send back reversed string to client
-		c.send(data)
-		counter += 1
+			# msg = msg[::-1]
+			# msg += ', ' + str(counter)
+
+			# # reverse the given string from client
+			data = msg.encode('ascii')
+			sendSocket = users[recipient]
+			# send back reversed string to client
+			sendSocket.send(data)
+			counter += 1
+			print_lock.release()
 
 	# connection closed
 	c.close()
@@ -74,12 +84,10 @@ def main():
 		# establish connection with client
 		c, addr = s.accept()
 
-		# lock acquired by client
-		print_lock.acquire()
 		print('Connected to :', addr[0], ':', addr[1])
 
 		# Start a new thread and return its identifier
-		start_new_thread(threaded, (c,))
+		start_new_thread(threaded, (c, addr))
 	s.close()
 
 
