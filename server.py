@@ -9,10 +9,21 @@ print_lock = threading.Lock()
 
 counter = 0
 
+# right now just making username tracker a list for ease, will eventually need to be
+# a dictionary also tracking logged in status and address
+users = []
+
 
 # thread function
 def threaded(c):
 	global counter
+
+	getUsername = c.recv(1024)
+	getUsername = getUsername.decode("ascii")
+	if getUsername not in users:
+		users.append(getUsername)
+		print(users)
+	
 	while True:
 
 		# data received from client
@@ -20,10 +31,12 @@ def threaded(c):
 		if not data:
 			print('Bye')
 			# lock released on exit
+			# THIS IS PROBLEMATIC, YOU CAN'T EVEN GET MULTIPLE CONNECTIONS
 			print_lock.release()
 			break
 
 		msg = data.decode('ascii')
+		print(msg)
 		msg = msg[::-1]
 		msg += ', ' + str(counter)
 
@@ -39,7 +52,9 @@ def threaded(c):
 
 
 def main():
-	host = ""
+	# hunch here is that we have to make the host the IP of the server computer
+	# otherwise you are just listening for everything
+	host = "10.250.139.197"
 
 	# reserve a port on your computer
 	# in our case it is 12345 but it
