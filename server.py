@@ -7,64 +7,69 @@ import threading
 
 print_lock = threading.Lock()
 
-counter = 0
-
 # right now just making username tracker a list for ease, will eventually need to be
 # a dictionary also tracking logged in status and address
-users = {}
+usernames = {}
 
-
-# thread function
+# thread function - has all workflow logic
 def threaded(c, addr):
-	print(addr)
-	global counter
 
-	getUsername = c.recv(1024)
-	getUsername = getUsername.decode("ascii")
-	if getUsername not in users:
-		users[getUsername] = c
 	
 	while True:
-
 		# data received from client
-		data = c.recv(1024)
-		if not data:
-			print('Bye')
-
-			# alter dictionary so IP set to 0
-			users[getUsername] = 0
-			break
-		else:
-			print_lock.acquire()
-			wire = data.decode('ascii')
-
-			# code for processing wire protocol should go here
-			wire = wire.split("|")
-			print(wire)
-			recipient = wire[0]
-			msg = wire[1]
-
-			# after processing, direct arguments to the right function
-
-			# msg = msg[::-1]
-			# msg += ', ' + str(counter)
-
-			# # reverse the given string from client
-			data = msg.encode('ascii')
-			sendSocket = users[recipient]
-			# send back reversed string to client
-			sendSocket.send(data)
-			counter += 1
+		client_input = c.recv(1024)
+		client_input = client_input.decode("ascii")
+		if client_input.count('|') != 1:
+			print("input must have one '|' character")
 			print_lock.release()
+			break
 
-	# connection closed
+		print_lock.acquire()
+
+		wire, message = client_input.split('|')
+
+		if (len(wire) != 2)
+
+		# first char in wire: 0 means not signed in, 1 means signed in
+		# second char in wire: function being called
+
+		wire, message = client_input.split('|')
+
+		server_response = "f"
+
+		# switch cases for the function being called
+		match wire[1]:
+
+			# create username
+			case '0':
+				assert wire[0] == 0, f"already logged in: disconnect to create a new username"
+				if message not in usernames:
+					usernames[message] = message
+					server_response = "t"
+
+			# login
+			case '1':
+				assert wire[0] == 0, f"already logged in: disconnect to login with a different username"
+				if message in usernames:
+					server_response = "t"
+
+			# case '2':
+
+			# case '3':
+
+			case other:
+				print('invalid function call')
+
+		server_response = server_response.encode('ascii')
+		c.send(server_response)
+
 	c.close()
-
 
 def main():
 	# hunch here is that we have to make the host the IP of the server computer
 	# otherwise you are just listening for everything
-	host = "10.250.139.197"
+	# ash ip: 10.250.248.85
+	host = '10.250.248.85'
 
 	# reserve a port on your computer
 	# in our case it is 12345 but it
@@ -80,7 +85,6 @@ def main():
 
 	# a forever loop until client wants to exit
 	while True:
-
 		# establish connection with client
 		c, addr = s.accept()
 
