@@ -83,7 +83,8 @@ def threaded(c, addr):
 		print('sent')
 
 	c.close()
-	usernames[message] = 0
+	if message in usernames:
+		usernames[message] = 0
 	if c in socket_to_curr_username:
 		del socket_to_curr_username[c]
 
