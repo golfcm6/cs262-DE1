@@ -5,30 +5,34 @@ import socket
 from _thread import *
 import threading
 
-print_lock = threading.Lock()
+# print_lock = threading.Lock()
 
 # right now just making username tracker a list for ease, will eventually need to be
 # a dictionary also tracking logged in status and address
 usernames = {}
+socket_to_curr_username = {}
 
 # thread function - has all workflow logic
+# client end does input error handling properly
 def threaded(c, addr):
-
-	
 	while True:
-		# data received from client
-		client_input = c.recv(1024)
-		client_input = client_input.decode("ascii")
-		if client_input.count('|') != 1:
-			print("input must have one '|' character")
-			print_lock.release()
-			break
 
-		print_lock.acquire()
+		# data received from client
+		# hangs here and takes in empty message
+		client_input = c.recv(1024)
+		if not client_input:
+			print('client: ' + str(c) +  ' disconnected')
+			# only happens when a user was logged in
+			if c in socket_to_curr_username:
+				usernames[socket_to_curr_username[c]] = 0
+				del socket_to_curr_username[c]
+
+			break
+		client_input = client_input.decode("ascii")
+
+		# print_lock.acquire()
 
 		wire, message = client_input.split('|')
-
-		if (len(wire) != 2)
 
 		# first char in wire: 0 means not signed in, 1 means signed in
 		# second char in wire: function being called
@@ -38,20 +42,33 @@ def threaded(c, addr):
 		server_response = "f"
 
 		# switch cases for the function being called
-		match wire[1]:
+
+		fn = wire[1]
+		match fn:
 
 			# create username
 			case '0':
-				assert wire[0] == 0, f"already logged in: disconnect to create a new username"
+				# assert wire[0] == 0, f"already logged in: disconnect to create a new username"
 				if message not in usernames:
-					usernames[message] = message
+					usernames[message] = c
 					server_response = "t"
+				else:
+					server_response += " | username taken"
 
 			# login
 			case '1':
-				assert wire[0] == 0, f"already logged in: disconnect to login with a different username"
+				# assert wire[0] == 0, f"already logged in: disconnect to login with a different username"
 				if message in usernames:
-					server_response = "t"
+					if usernames[message] == 0:
+						server_response = "t"
+						usernames[message] = c
+						# keep track of active username at a socket so we can log them out if they badly disconnect
+						socket_to_curr_username[c] = message
+					else:
+						server_response += " | already logged in"
+
+				else:
+					server_response += " | username does not exist"
 
 			# case '2':
 
@@ -60,12 +77,18 @@ def threaded(c, addr):
 			case other:
 				print('invalid function call')
 
+		print(server_response)
 		server_response = server_response.encode('ascii')
 		c.send(server_response)
+		print('sent')
 
 	c.close()
+	usernames[message] = 0
+	if c in socket_to_curr_username:
+		del socket_to_curr_username[c]
 
 def main():
+
 	# hunch here is that we have to make the host the IP of the server computer
 	# otherwise you are just listening for everything
 	# ash ip: 10.250.248.85
