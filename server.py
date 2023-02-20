@@ -20,20 +20,39 @@ online = {}
 # k, v = username, {sender : list of messages they received from sender}
 offline_messages = {}
 
+
+
+def offline(c):
+	global offline_messages
+	res = ''
+	if online[c] not in offline_messages or offline_messages[online[c]] == {}:
+		res = 'f'
+	else:
+		res = offline_messages[online[c]]
+
+	ds_lock.acquire()
+	offline_messages = {}
+	ds_lock.release()
+
+	return res
+
 # thread function - has all workflow logic
 # client end does input error handling properly
 def threaded(c, addr):
+	global offline_messages
 	while True:
 
 		# data received from client
 		# hangs here and takes in empty message
 		client_input = c.recv(1024)
 		if not client_input:
-			print('client: ' + str(c) +  ' disconnected')
+			print('user: "' + str(online[c]) +  '" disconnected')
 			# only happens when a user was logged in
 			if c in online:
 				ds_lock.acquire()
-				usernames[online[c]] = 0
+				# if its not in usernames, means user just deleted account and then disconnected
+				if online[c] in usernames:
+					usernames[online[c]] = 0
 				del online[c]
 				ds_lock.release()
 
@@ -57,8 +76,10 @@ def threaded(c, addr):
 				if message not in usernames:
 					ds_lock.acquire()
 					usernames[message] = c
+					online[c] = message
 					ds_lock.release()
 					server_response = "t"
+
 				else:
 					server_response = "username taken"
 
@@ -72,6 +93,8 @@ def threaded(c, addr):
 						# keep track of active username at a socket so we can log them out if they badly disconnect
 						online[c] = message
 						ds_lock.release()
+
+						server_response += str(offline(c))
 					else:
 						server_response = "already logged in"
 
@@ -103,39 +126,44 @@ def threaded(c, addr):
 
 				if recipient not in usernames:
 					server_response = 'recipient does not exist'
-					break
-
-				# recipient online - send directly to them
-				#TODO: no need to lock for the online send right?
-				if usernames[recipient] != 0:
-					# formatted_msg = '*** new message from ' + online[c] + ':' + msg + '***'
-					formatted_msg = msg
-					# send message to the socket recipient is currently logged in at
-					try:
-						usernames[recipient].send(formatted_msg.encode('ascii'))
-						print('sent')
-						server_response = 't'
-					except:
-						print('server error in sending message to online user')
-
-				# recipient offline - must store
 				else:
-					ds_lock.acquire()
-					if recipient in offline_messages:
-						if online[c] in offline_messages[recipient]:
-							offline_messages[recipient][online[c]].append(msg)
-						else:
-							offline_messages[recipient][online[c]] = [msg]
+					# recipient online - send directly to them
+					#TODO: no need to lock for the online send right?
+					if usernames[recipient] != 0:
+						formatted_msg = '*** new message from ' + online[c] + '***\n' + msg + '\n***end message***'
+						# send message to the socket recipient is currently logged in at
+						try:
+							usernames[recipient].send(formatted_msg.encode('ascii'))
+							print('sent')
+							server_response = 't'
+						except:
+							print('server error in sending message to online user')
+
+					# recipient offline - must store
 					else:
-						offline_messages[recipient] = {}
-						offline_messages[recipient][online[c]] = [msg]
+						ds_lock.acquire()
+						if recipient in offline_messages:
+							if online[c] in offline_messages[recipient]:
+								offline_messages[recipient][online[c]].append(msg)
+							else:
+								offline_messages[recipient][online[c]] = [msg]
+						else:
+							offline_messages[recipient] = {}
+							offline_messages[recipient][online[c]] = [msg]
+						ds_lock.release()
+						server_response = 't'
+
+			# delete account
+			case '4':
+				try:
+					ds_lock.acquire()
+					del usernames[message]
+					if message in offline_messages:
+						del offline_messages[message]
 					ds_lock.release()
 					server_response = 't'
-					
-					# offline_messages[recipient][online[c]] 
-
-
-
+				except:
+					server_response = 'error in deleting account'
 
 			case other:
 				print('invalid function call')
@@ -182,6 +210,7 @@ def main():
 		print('Connected to :', addr[0], ':', addr[1])
 
 		# Start a new thread and return its identifier
+		# threading.Thread(target=threaded(c, addr)).start()
 		start_new_thread(threaded, (c, addr))
 	s.close()
 

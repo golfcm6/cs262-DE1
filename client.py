@@ -79,15 +79,23 @@ def login(s):
 		validity = s.recv(1024)
 		validity = validity.decode("ascii")
 
-		if (validity != "t"):
+		if (validity[0] != "t"):
 			print(validity)
 			quickstart(s)
 		
 		else:
 			# set to active session
-			print("logged in as " + existing_username)
+			print("logged in as " + existing_username + '\n')
 			session.status = "1"
 			session.username = existing_username
+
+			offline_messages = validity[1:]
+
+			print("offline messages: \n")
+			#TODO: figure out why empty dict is f lol
+			if offline_messages == 'f':
+				offline_messages = 'none'
+			print(offline_messages)
 
 	except:
 		print("error in logging in, try again")
@@ -142,10 +150,21 @@ def send_message(s):
 	else:
 		print('sent')
 
+def delete_account(s):
+	data = session.status + '4|' + session.username
+	s.send(data.encode("ascii"))
+	output = s.recv(1024)
+	output = output.decode('ascii')
+
+	if output != 't':
+		print(output)
+	else:
+		print('Account successfully deleted. Goodbye!')
+		sys.exit()
+
 
 
 def logged_in(s):
-	# keep asking for user to send messages until manually quit by a user trigger
 	assert(session.status == "1")
 
 	while True:
@@ -160,17 +179,20 @@ def logged_in(s):
 				message = message.decode('ascii')
 				print(message)
 			else:
-				# message you send to server
-				message = input('\nWelcome, ' + session.username + '! Enter:\n2    -->  regex search for accounts\n3    --> send message\nexit --> logout\n')
+				print('\nWelcome, ' + session.username + '!')
+
+				message = input('Enter:\n2    -->  regex search for accounts\n3    --> send message\n4    --> delete account\nexit --> logout\n')
 
 				match message:
 					case '2':
 						account_search(s)
 					case '3':
 						send_message(s)
+					case '4':
+						delete_account(s)
 					case 'exit':
 						print('see ya')
-						break
+						sys.exit()
 
 def main():
 	# local host IP '127.0.0.1'
