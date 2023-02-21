@@ -2,6 +2,9 @@
 import socket
 import select
 import sys
+import errno
+
+SERVER_FAILURE = "server offline, exiting from chat app"
 
 
 class Session:
@@ -30,32 +33,29 @@ def create_username(s):
 	# 0 as first element to indicate not logged in, 0 as next element to indicate creating new username
 	# | (pipe character)
 	# username text 
-	try:
-		# make sure not active session
-		assert(session.status == "0")
-		data = session.status + "0|" + new_username
+	# make sure not active session
+	assert(session.status == "0")
+	data = session.status + "0|" + new_username
 
-		# send wire to server
+	# send wire to server
+	try:
 		s.send(data.encode("ascii"))
 		validity = s.recv(1024)
 		validity = validity.decode("ascii")
+	except IOError as e:
+		if e.errno == errno.EPIPE:
+			print(SERVER_FAILURE)
+			sys.exit()
 
-		if (validity != "t"):
-			print(validity)
-			quickstart(s)
-		else:
-			print("logged in as " + new_username)
+	if (validity != "t"):
+		print(validity)
+		quickstart(s)
+	else:
+		print("logged in as " + new_username)
 
-			# set session to active and set username
-			session.status = "1"
-			session.username = new_username
-		
-	except Exception as e:
-		print(repr(e))
-		print("error in creating username, try again")
-		# redirect to asking for new username again
-		create_username(s)
-
+		# set session to active and set username
+		session.status = "1"
+		session.username = new_username
 
 
 # login to an existing username
@@ -68,39 +68,36 @@ def login(s):
 	# 0 as first element to indicate not logged in, 1 as next element to indicate entering existing username
 	# | (pipe character)
 	# username text 
+	# make sure not an active session
+	assert(session.status == "0")
+	data = session.status + "1|" + existing_username
+
 	try:
-		# make sure not an active session
-		assert(session.status == "0")
-
-		data = session.status + "1|" + existing_username
-
 		s.send(data.encode("ascii"))
-
 		validity = s.recv(1024)
 		validity = validity.decode("ascii")
+	except IOError as e:
+		if e.errno == errno.EPIPE:
+			print(SERVER_FAILURE)
+			sys.exit()
 
-		if (validity[0] != "t"):
-			print(validity)
-			quickstart(s)
-		
-		else:
-			# set to active session
-			print("logged in as " + existing_username + '\n')
-			session.status = "1"
-			session.username = existing_username
+	if (validity[0] != "t"):
+		print(validity)
+		quickstart(s)
+	
+	else:
+		# set to active session
+		print("logged in as " + existing_username + '\n')
+		session.status = "1"
+		session.username = existing_username
 
-			offline_messages = validity[1:]
+		offline_messages = validity[1:]
 
-			print("offline messages: \n")
-			#TODO: figure out why empty dict is f lol
-			if offline_messages == 'f':
-				offline_messages = 'none'
-			print(offline_messages)
-
-	except:
-		print("error in logging in, try again")
-		# redirect to logging in again
-		login(s)
+		print("offline messages: \n")
+		#TODO: figure out why empty dict is f lol
+		if offline_messages == 'f':
+			offline_messages = 'none'
+		print(offline_messages)
 
 def quickstart(s):
 	while True:
@@ -121,10 +118,14 @@ def account_search(s):
 
 	data = session.status + "2|" + regex_exp
 
-	s.send(data.encode("ascii"))
-
-	output = s.recv(1024)
-	output = output.decode('ascii')
+	try:
+		s.send(data.encode("ascii"))
+		output = s.recv(1024)
+		output = output.decode('ascii')
+	except IOError as e:
+		if e.errno == errno.EPIPE:
+			print(SERVER_FAILURE)
+			sys.exit()
 
 	if output == 'f':
 		print("no results found")
@@ -141,9 +142,15 @@ def send_message(s):
 	msg = input("Enter message to send: ")
 
 	data = session.status + "3|" + recipient + '|' + msg
-	s.send(data.encode("ascii"))
-	output = s.recv(1024)
-	output = output.decode('ascii')
+
+	try:
+		s.send(data.encode("ascii"))
+		output = s.recv(1024)
+		output = output.decode('ascii')
+	except IOError as e:
+		if e.errno == errno.EPIPE:
+			print(SERVER_FAILURE)
+			sys.exit()
 
 	if output != 't':
 		print(output)
@@ -152,9 +159,15 @@ def send_message(s):
 
 def delete_account(s):
 	data = session.status + '4|' + session.username
-	s.send(data.encode("ascii"))
-	output = s.recv(1024)
-	output = output.decode('ascii')
+
+	try:
+		s.send(data.encode("ascii"))
+		output = s.recv(1024)
+		output = output.decode('ascii')
+	except IOError as e:
+		if e.errno == errno.EPIPE:
+			print(SERVER_FAILURE)
+			sys.exit()
 
 	if output != 't':
 		print(output)
@@ -175,13 +188,18 @@ def logged_in(s):
 
 		for socks in read_sockets:
 			if socks == s:
-				message = s.recv(1024)
-				message = message.decode('ascii')
-				print(message)
+				try:
+					message = s.recv(1024)
+					message = message.decode('ascii')
+					print(message)
+				except IOError as e:
+					if e.errno == errno.EPIPE:
+						print(SERVER_FAILURE)
+						sys.exit()
 			else:
 				print('\nWelcome, ' + session.username + '!')
 
-				message = input('Enter:\n2    -->  regex search for accounts\n3    --> send message\n4    --> delete account\nexit --> logout\n')
+				message = input('Enter:\n2    --> regex search for accounts\n3    --> send message\n4    --> delete account\nexit --> logout\n')
 
 				match message:
 					case '2':
@@ -195,8 +213,9 @@ def logged_in(s):
 						sys.exit()
 
 def main():
-	# local host IP '127.0.0.1'
-	host = '10.228.32.141'
+	# ash ip on harvard secure: 10.250.248.85
+	# ash ip on eduroam: 10.228.32.141
+	host = '10.250.248.85'
 
 	# Define the port on which you want to connect
 	port = 49153
@@ -211,8 +230,5 @@ def main():
 	# has all functionality for when logged in
 	logged_in(s)
 		
-	# close the connection
-	s.close()
-
 if __name__ == '__main__':
 	main()

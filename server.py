@@ -187,8 +187,9 @@ def main():
 
 	# hunch here is that we have to make the host the IP of the server computer
 	# otherwise you are just listening for everything
-	# ash ip: 10.250.248.85
-	host = '10.228.32.141'
+	# ash ip on harvard secure: 10.250.248.85
+	# ash ip on eduroam: 10.228.32.141
+	host = '10.250.248.85'
 
 	# reserve a port on your computer
 	# in our case it is 12345 but it
