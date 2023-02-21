@@ -4,7 +4,7 @@ import select
 import sys
 import errno
 
-SERVER_FAILURE = "server offline, exiting from chat app"
+SERVER_FAILURE = "server offline, chat app dead :("
 
 
 class Session:
@@ -38,14 +38,12 @@ def create_username(s):
 	data = session.status + "0|" + new_username
 
 	# send wire to server
-	try:
-		s.send(data.encode("ascii"))
-		validity = s.recv(1024)
-		validity = validity.decode("ascii")
-	except IOError as e:
-		if e.errno == errno.EPIPE:
-			print(SERVER_FAILURE)
-			sys.exit()
+	s.send(data.encode("ascii"))
+	validity = s.recv(1024)
+	if not validity:
+		print(SERVER_FAILURE)
+		sys.exit()
+	validity = validity.decode("ascii")
 
 	if (validity != "t"):
 		print(validity)
@@ -72,14 +70,12 @@ def login(s):
 	assert(session.status == "0")
 	data = session.status + "1|" + existing_username
 
-	try:
-		s.send(data.encode("ascii"))
-		validity = s.recv(1024)
-		validity = validity.decode("ascii")
-	except IOError as e:
-		if e.errno == errno.EPIPE:
-			print(SERVER_FAILURE)
-			sys.exit()
+	s.send(data.encode("ascii"))
+	validity = s.recv(1024)
+	if not validity:
+		print(SERVER_FAILURE)
+		sys.exit()
+	validity = validity.decode("ascii")
 
 	if (validity[0] != "t"):
 		print(validity)
@@ -118,14 +114,12 @@ def account_search(s):
 
 	data = session.status + "2|" + regex_exp
 
-	try:
-		s.send(data.encode("ascii"))
-		output = s.recv(1024)
-		output = output.decode('ascii')
-	except IOError as e:
-		if e.errno == errno.EPIPE:
-			print(SERVER_FAILURE)
-			sys.exit()
+	s.send(data.encode("ascii"))
+	output = s.recv(1024)
+	if not output:
+		print(SERVER_FAILURE)
+		sys.exit()
+	output = output.decode('ascii')
 
 	if output == 'f':
 		print("no results found")
@@ -143,14 +137,12 @@ def send_message(s):
 
 	data = session.status + "3|" + recipient + '|' + msg
 
-	try:
-		s.send(data.encode("ascii"))
-		output = s.recv(1024)
-		output = output.decode('ascii')
-	except IOError as e:
-		if e.errno == errno.EPIPE:
-			print(SERVER_FAILURE)
-			sys.exit()
+	s.send(data.encode("ascii"))
+	output = s.recv(1024)
+	if not output:
+		print(SERVER_FAILURE)
+		sys.exit()
+	output = output.decode('ascii')
 
 	if output != 't':
 		print(output)
@@ -160,14 +152,12 @@ def send_message(s):
 def delete_account(s):
 	data = session.status + '4|' + session.username
 
-	try:
-		s.send(data.encode("ascii"))
-		output = s.recv(1024)
-		output = output.decode('ascii')
-	except IOError as e:
-		if e.errno == errno.EPIPE:
-			print(SERVER_FAILURE)
-			sys.exit()
+	s.send(data.encode("ascii"))
+	output = s.recv(1024)
+	if not output:
+		print(SERVER_FAILURE)
+		sys.exit()
+	output = output.decode('ascii')
 
 	if output != 't':
 		print(output)
@@ -188,14 +178,13 @@ def logged_in(s):
 
 		for socks in read_sockets:
 			if socks == s:
-				try:
-					message = s.recv(1024)
-					message = message.decode('ascii')
-					print(message)
-				except IOError as e:
-					if e.errno == errno.EPIPE:
-						print(SERVER_FAILURE)
-						sys.exit()
+				message = s.recv(1024)
+				if not message:
+					print(SERVER_FAILURE)
+					sys.exit()
+				message = message.decode('ascii')
+				print(message)
+
 			else:
 				print('\nWelcome, ' + session.username + '!')
 
