@@ -1,12 +1,10 @@
-# import socket programming library
 import socket
-
-# import thread module
-from _thread import *
+from _thread import start_new_thread
 import threading
 import re
+import sys
 
-# called whenever a DS gets updated
+# used whenever a data structure gets updated
 ds_lock = threading.Lock()
 
 # k, v = username, socket currently being used (0 if not logged in)
@@ -19,8 +17,6 @@ usernames = {}
 online = {}
 # k, v = username, {sender : list of messages they received from sender}
 offline_messages = {}
-
-
 
 def offline(c):
 	global offline_messages
@@ -38,16 +34,14 @@ def offline(c):
 
 # thread function - has all workflow logic
 # client end does input error handling properly
-def threaded(c, addr):
+def threaded(c):
 	global offline_messages
 	while True:
-
-		# data received from client
-		# hangs here and takes in empty message
 		client_input = c.recv(1024)
+		# client disconnect
 		if not client_input:
 			print('user: "' + str(online[c]) +  '" disconnected')
-			# only happens when a user was logged in
+			# must update user to be offline
 			if c in online:
 				ds_lock.acquire()
 				# if its not in usernames, means user just deleted account and then disconnected
@@ -110,8 +104,8 @@ def threaded(c, addr):
 					try:
 						if re.search(message, u):
 							server_response += u + "|"
-					except:
-						server_response = 'regex error '
+					except Exception as _:
+						server_response = "regex error"
 						break
 
 				if len(server_response) != 0:
@@ -128,7 +122,6 @@ def threaded(c, addr):
 					server_response = 'recipient does not exist'
 				else:
 					# recipient online - send directly to them
-					#TODO: no need to lock for the online send right?
 					if usernames[recipient] != 0:
 						formatted_msg = '*** new message from ' + online[c] + '***\n' + msg + '\n***end message***'
 						# send message to the socket recipient is currently logged in at
@@ -136,8 +129,8 @@ def threaded(c, addr):
 							usernames[recipient].send(formatted_msg.encode('ascii'))
 							print('sent')
 							server_response = 't'
-						except:
-							print('server error in sending message to online user')
+						except Exception as _:
+							server_response = 'server error in sending message to online user, try again'
 
 					# recipient offline - must store
 					else:
@@ -162,7 +155,7 @@ def threaded(c, addr):
 						del offline_messages[message]
 					ds_lock.release()
 					server_response = 't'
-				except:
+				except Exception as _:
 					server_response = 'error in deleting account'
 
 			case other:
@@ -184,12 +177,15 @@ def threaded(c, addr):
 		ds_lock.release()
 
 def main():
+	args = sys.argv[1:]
+	assert len(sys.argv) == 2, f"provide host address"
 
 	# hunch here is that we have to make the host the IP of the server computer
 	# otherwise you are just listening for everything
 	# ash ip on harvard secure: 10.250.248.85
 	# ash ip on eduroam: 10.228.32.141
-	host = '10.250.248.85'
+	# host = '10.250.248.85'
+	host = args[0]
 
 	# reserve a port on your computer
 	# in our case it is 12345 but it
@@ -210,10 +206,8 @@ def main():
 
 		print('Connected to :', addr[0], ':', addr[1])
 
-		# Start a new thread and return its identifier
-		# threading.Thread(target=threaded(c, addr)).start()
-		start_new_thread(threaded, (c, addr))
-	s.close()
+		# Start a new thread
+		start_new_thread(threaded, (c,))
 
 if __name__ == '__main__':
 	main()

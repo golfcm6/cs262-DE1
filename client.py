@@ -2,17 +2,20 @@
 import socket
 import select
 import sys
-import errno
 
 SERVER_FAILURE = "server offline, chat app dead :("
-
+client_home_msg = """
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout\n
+"""
 
 class Session:
 	def __init__(self, name, status):
 		self.username = name
 		self.status = status
-
-
 
 session = Session("", "0")
 
@@ -22,7 +25,6 @@ def check_valid_username(u):
 		return False
 	return True
 
-# new username
 def create_username(s):
 	while True:
 		new_username = input("Enter a new username: ")
@@ -50,11 +52,9 @@ def create_username(s):
 		quickstart(s)
 	else:
 		print("logged in as " + new_username)
-
 		# set session to active and set username
 		session.status = "1"
 		session.username = new_username
-
 
 # login to an existing username
 def login(s):
@@ -174,7 +174,7 @@ def logged_in(s):
 		# once logged in, we constantly check if server has sent us something (incoming message)
 		sockets_list = [sys.stdin, s]
 
-		read_sockets, write_socket, error_socket = select.select(sockets_list,[],[])
+		read_sockets, _, _ = select.select(sockets_list,[],[])
 
 		for socks in read_sockets:
 			if socks == s:
@@ -187,8 +187,7 @@ def logged_in(s):
 
 			else:
 				print('\nWelcome, ' + session.username + '!')
-
-				message = input('Enter:\n2    --> regex search for accounts\n3    --> send message\n4    --> delete account\nexit --> logout\n')
+				message = input(client_home_msg)
 
 				match message:
 					case '2':
@@ -202,9 +201,12 @@ def logged_in(s):
 						sys.exit()
 
 def main():
+	args = sys.argv[1:]
+	assert len(sys.argv) == 2, f"provide server host address"
+
 	# ash ip on harvard secure: 10.250.248.85
 	# ash ip on eduroam: 10.228.32.141
-	host = '10.250.248.85'
+	host = args[0]
 
 	# Define the port on which you want to connect
 	port = 49153
