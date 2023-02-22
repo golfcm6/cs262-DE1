@@ -6,7 +6,7 @@ echo creating test_output files
 python3 -u server.py 127.0.0.1 > test_files/server_output.txt &
 PID1=$!
 sleep 1
-# testing shit
+
 # https://serverfault.com/questions/188936/writing-to-stdin-of-background-process
 rm /tmp/srv-input
 mkfifo /tmp/srv-input
