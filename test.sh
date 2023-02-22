@@ -1,5 +1,5 @@
 #!/bin/bash
-echo starting unit tests
+echo starting unit tests, wire protocol/sockets
 sleep 1
 echo creating test_output files
 

@@ -1,0 +1,14 @@
+client connected
+Enter c to create a new username or u to log in to existing account: Enter a new username: enter text between 1-10 characters with no spaces or |
+Enter a new username: creating username
+t
+
+Welcome, ash!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+see ya

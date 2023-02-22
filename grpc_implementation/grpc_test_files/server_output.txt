@@ -1,0 +1,25 @@
+server up and running
+Create Request Received: 
+username: "ash"
+
+Login Request Received: 
+username: "ash"
+
+Create Request Received: 
+username: "charles"
+
+ash
+ash
+HERE
+
+ash
+Login Request Received: 
+username: "bob"
+
+Login Request Received: 
+username: "ash"
+
+sending live message to logged in user
+Login Request Received: 
+username: "charles"
+

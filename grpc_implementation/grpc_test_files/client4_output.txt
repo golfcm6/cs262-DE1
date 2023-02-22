@@ -1,0 +1,4 @@
+client connected
+Enter c to create a new username or u to log in to existing account: Enter your username: logging in
+something went wrong
+Enter c to create a new username or u to log in to existing account: Enter c to create a new username or u to log in to existing account: 
