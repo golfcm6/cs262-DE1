@@ -8,18 +8,14 @@ username: "ash"
 Create Request Received: 
 username: "charles"
 
-ash
-ash
-HERE
-
-ash
+sending live message to logged in user
 Login Request Received: 
 username: "bob"
 
 Login Request Received: 
 username: "ash"
 
-sending live message to logged in user
+sending offline message to user not logged in
 Login Request Received: 
 username: "charles"
 

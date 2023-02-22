@@ -29,11 +29,11 @@ sleep 1
 
 # now do some test to verify that the outputs of files are correct
 # thx https://stackoverflow.com/questions/12900538/fastest-way-to-tell-if-two-files-have-the-same-contents-in-unix-linux
-# echo checking output files
-# cmp --silent test_files/client1_output.txt test_files/client1_expected.txt || echo "client1 failed"
-# cmp --silent test_files/client2_output.txt test_files/client2_expected.txt || echo "client2 failed"
-# cmp --silent test_files/client3_output.txt test_files/client3_expected.txt || echo "client3 failed"
-# cmp --silent test_files/client4_output.txt test_files/client4_expected.txt || echo "client4 failed"
+echo checking output files
+cmp --silent grpc_test_files/client1_output.txt grpc_test_files/client1_expected.txt || echo "client1 failed"
+cmp --silent grpc_test_files/client2_output.txt grpc_test_files/client2_expected.txt || echo "client2 failed"
+cmp --silent grpc_test_files/client3_output.txt grpc_test_files/client3_expected.txt || echo "client3 failed"
+cmp --silent grpc_test_files/client4_output.txt grpc_test_files/client4_expected.txt || echo "client4 failed"
 
 echo all tests passed!
 kill $PID1
