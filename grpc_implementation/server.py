@@ -8,6 +8,7 @@ from _thread import start_new_thread
 import threading
 import re
 import sys
+import re
 
 class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
     def __init__(self):
@@ -15,6 +16,8 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
         # u, s = username, status (either 0, "logged in")
         self.usernames = {}
 
+        # dictionary to hold offline_messages to deliver once users log in
+        # k, v = receiving username, {sender : list of messages they received from sender}
         self.online_messages = {}
 
         # dictionary to hold offline_messages to deliver once users log in
@@ -30,11 +33,10 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
             res = "f"
         else:
             res = self.offline_messages[queued_user]
-        
-        self.ds_lock.acquire()
-	    # delete offline messages for the user who just logged in since we're delivering the message now
-        self.offline_messages[queued_user] = {}
-        self.ds_lock.release()
+            self.ds_lock.acquire()
+	        # delete offline messages for the user who just logged in since we're delivering the message now
+            self.offline_messages[queued_user] = {}
+            self.ds_lock.release()
 
         return res
 
@@ -83,7 +85,7 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
         user_req = request.username
 
         # continuously query
-        while True:
+        while self.usernames[user_req] == "logged in":
             # if there are new messages uploaded to the 
             if user_req in self.online_messages and len(self.online_messages[user_req]) > 0:
                 for key, value in list(self.online_messages[user_req].items()):
@@ -97,7 +99,7 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
             server_response = pb2.Status(status_result = "recipient does not exist")
             return server_response
 
-        self.ds_lock.acquire()
+        # self.ds_lock.acquire()
 
         # user is logged in, add to DS holding online messages
         if self.usernames[request.receiver] == "logged in":
@@ -123,15 +125,54 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
             else:
                 self.offline_messages[request.receiver] = {}
                 self.offline_messages[request.receiver][request.sender] = [request.content]
-        self.ds_lock.release()
+        # self.ds_lock.release()
         server_response = pb2.Status(status_result = "t")
         return server_response
     
     def logout(self, request, context):
         assert(request.username in self.usernames)
+
+        self.ds_lock.acquire()
+
         self.usernames[request.username] = 0
+
+        self.ds_lock.release()
+        
+        assert(self.usernames[request.username] == 0)
         server_response = pb2.Status(status_result = "t")
         return server_response
+    
+
+    def delete_user(self, request, context):
+        try:
+            # self.ds_lock.acquire()
+            del self.usernames[request.username]
+            if request.username in self.offline_messages:
+                del self.offline_messages[request.username]
+            # self.ds_lock.release()
+            msg = "t"
+        except Exception as _:
+            msg = "error in deleting account"
+        server_response = pb2.Status(status_result = msg)
+        return server_response
+    
+    def search_users(self, request, context):
+        for u in self.usernames:
+            try:
+                if re.search(request.username_search, u):
+                    server_response += u + "|"
+            except Exception as _:
+                server_response = "regex error"
+                break
+        
+        if len(server_response) != 0:
+            server_response = server_response[:-1]
+        else:
+            server_response = "f"
+        
+        ret_response = pb2.Status(status_result = server_response)
+        return ret_response
+        
             
 
         

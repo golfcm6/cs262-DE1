@@ -117,11 +117,33 @@ def logout(stub):
 
 def listen_to_stream(stub):
     cur_user = pb2.User(username = session.username)
-
-    for el in stub.stream_chats(cur_user):
+    stream = stub.stream_chats(cur_user)
+    for el in stream:
         print(el.content)
-    
-    sys.exit()
+    return
+
+def delete_account(stub):
+    global session
+    assert(session.username)
+
+    del_user = pb2.User(username = session.username)
+    server_response = stub.delete_user(del_user)
+
+    if server_response.status_result != "t":
+        print(server_response.status_result)
+    else:
+        print('Account successfully deleted. Goodbye!')
+        sys.exit()
+
+def account_search(stub):
+    regex_exp = input("Enter regex pattern to search through usernames: ")
+    new_search = pb2.Search(username_search = regex_exp)
+    server_response = stub.search_users(new_search)
+
+    if server_response.status_result[0] != "f":
+        print(server_response.status_result.split('|'))
+    else:
+        print("no results found")
 
 
 def logged_in(stub):
@@ -129,7 +151,6 @@ def logged_in(stub):
     assert(session.status != "0")
     assert(session.username)
 
-    cur_user = pb2.User(username = session.username)
     threading.Thread(target=listen_to_stream, args=(stub,), daemon=True).start()
 
     while True:
@@ -137,7 +158,7 @@ def logged_in(stub):
         message = input(client_home_msg)
         match message:
             case '2':
-                pass
+                account_search(stub)
             case '3':
                 send_message(stub)
             case '4':
