@@ -3,12 +3,9 @@ import chat_server_pb2 as pb2
 import chat_server_pb2_grpc as pb2_grpc
 from concurrent import futures
 
-import socket
-from _thread import start_new_thread
 import threading
 import re
 import sys
-import re
 
 class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
     def __init__(self):
@@ -178,13 +175,6 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
         return ret_response
         
             
-
-        
-                
-
-
-
-
 
 def serve():
     args = sys.argv[1:]

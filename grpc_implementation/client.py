@@ -1,7 +1,6 @@
 import grpc
 import chat_server_pb2 as pb2
 import chat_server_pb2_grpc as pb2_grpc
-from concurrent import futures
 import sys
 import threading
 
@@ -194,7 +193,6 @@ def run():
     
     host = args[0]
     port = 49153
-
 
     with grpc.insecure_channel('{}:{}'.format(host, port)) as channel:
         stub = pb2_grpc.Chat_ServiceStub(channel)

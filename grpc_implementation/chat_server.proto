@@ -22,8 +22,6 @@ message Search {
     string username_search = 1;
 }
 
-message Void {}
-
 service Chat_Service {
     rpc logout (User) returns (Status);
     rpc send_message (Text) returns (Status);
@@ -31,6 +29,5 @@ service Chat_Service {
     rpc delete_user (User) returns (Status);
     rpc login (User) returns (Status);
     rpc search_users (Search) returns (Text_Returnable);
-    rpc detect_disconnect (Status) returns (Void);
     rpc stream_chats (User) returns (stream Text_Returnable);
 }
