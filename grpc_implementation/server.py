@@ -84,7 +84,7 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
         # get the username
         user_req = request.username
 
-        # continuously query
+        # continuously query until user logs out
         while self.usernames[user_req] == "logged in":
             # if there are new messages uploaded to the 
             if user_req in self.online_messages and len(self.online_messages[user_req]) > 0:
@@ -193,7 +193,7 @@ def serve():
     host = args[0]
     port = 49153
 
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=5))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     pb2_grpc.add_Chat_ServiceServicer_to_server(Chat_ServiceServicer(), server)
     server.add_insecure_port('{}:{}'.format(host, port))
     print("server up and running")
