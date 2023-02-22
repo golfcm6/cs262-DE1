@@ -59,14 +59,11 @@ def threaded(c):
 
 		# first char in wire: 0 means not signed in, 1 means signed in
 		# second char in wire: function being called
-
 		server_response = ""
 
 		# switch cases for the function being called
-
 		fn = wire[1]
 		match fn:
-
 			# create username
 			case '0':
 				if message not in usernames:
@@ -101,8 +98,6 @@ def threaded(c):
 			case '2':
 				# no need to check if logged in, client end does this
 				for u in usernames:
-					# TODO: IF THIS NEVER ENDS, WE NEED TO TIME IT OUT
-					# TODO: do we need to lock for the search? no right?
 					try:
 						if re.search(message, u):
 							server_response += u + "|"
@@ -181,17 +176,8 @@ def threaded(c):
 def main():
 	args = sys.argv[1:]
 	assert len(sys.argv) == 2, f"provide host address"
-
-	# hunch here is that we have to make the host the IP of the server computer
-	# otherwise you are just listening for everything
-	# ash ip on harvard secure: 10.250.248.85
-	# ash ip on eduroam: 10.228.32.141
-	# host = '10.250.248.85'
 	host = args[0]
 
-	# reserve a port on your computer
-	# in our case it is 12345 but it
-	# can be anything
 	port = 49153
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	s.bind((host, port))

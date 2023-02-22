@@ -1,4 +1,3 @@
-# Import socket module
 import socket
 import select
 import sys
@@ -62,11 +61,7 @@ def login(s):
 		existing_username = input("Enter your username: ")
 		if check_valid_username(existing_username):
 			break
-	# wire 
-	# 0 as first element to indicate not logged in, 1 as next element to indicate entering existing username
-	# | (pipe character)
-	# username text 
-	# make sure not an active session
+
 	assert(session.status == "0")
 	data = session.status + "1|" + existing_username
 
@@ -90,7 +85,7 @@ def login(s):
 		offline_messages = validity[1:]
 
 		print("offline messages: \n")
-		#TODO: figure out why empty dict is f lol
+		# empty dict is f
 		if offline_messages == 'f':
 			offline_messages = 'none'
 		print(offline_messages)
@@ -151,7 +146,6 @@ def send_message(s):
 
 def delete_account(s):
 	data = session.status + '4|' + session.username
-
 	s.send(data.encode("ascii"))
 	output = s.recv(1024)
 	if not output:
@@ -187,9 +181,8 @@ def logged_in(s):
 
 			else:
 				print('\nWelcome, ' + session.username + '!')
-				# try:
-				message = input(client_home_msg)
 
+				message = input(client_home_msg)
 				match message:
 					case '2':
 						account_search(s)
@@ -200,16 +193,11 @@ def logged_in(s):
 					case 'exit':
 						print('see ya')
 						sys.exit()
-				# except:
-				# 	# EOF error from unit testing, sleep for the unit test
-				# 	time.sleep(10)
 
 def main():
 	args = sys.argv[1:]
 	assert len(sys.argv) == 2, f"provide server host address"
 
-	# ash ip on harvard secure: 10.250.248.85
-	# ash ip on eduroam: 10.228.32.141
 	host = args[0]
 
 	# Define the port on which you want to connect
@@ -217,7 +205,6 @@ def main():
 
 	s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
-	# connect to server on local computer
 	s.connect((host,port))
 
 	quickstart(s)
