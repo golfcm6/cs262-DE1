@@ -67,7 +67,7 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
                 server_response = "t"
 
                 self.ds_lock.acquire()
-                self.usernames[message] == "logged in"
+                self.usernames[message] = "logged in"
                 self.ds_lock.release() 
 
                 # add to response any offline messages missed
@@ -103,6 +103,7 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
 
         # user is logged in, add to DS holding online messages
         if self.usernames[request.receiver] == "logged in":
+            print("sending live message to logged in user")
             # if user already exists in the DS
             if request.receiver in self.online_messages:
                 # if there are existing messages from same sender undelivered
@@ -113,8 +114,10 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
             else:
                 self.online_messages[request.receiver] = {}
                 self.online_messages[request.receiver][request.sender] = [request.content]
+        
         # user not logged in
         else:
+            print("sending offline message to user not logged in")
             # if user already exists in the DS
             if request.receiver in self.offline_messages:
                 # if there are existing messages from same sender undelivered

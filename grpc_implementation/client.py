@@ -58,6 +58,7 @@ def login(stub):
             break
     print("logging in")
     login_req = pb2.User(username = existing_username)
+    
     login_status = stub.login(login_req)
 
     # check if login worked correctly
@@ -111,9 +112,13 @@ def send_message(stub):
         print('sent')
 
 def logout(stub):
+    global session
     logout_user = pb2.User(username = session.username)
     server_response = stub.logout(logout_user)
     assert(server_response.status_result == "t")
+
+    session.username = ""
+    session.status = "0"
 
 def listen_to_stream(stub):
     cur_user = pb2.User(username = session.username)
@@ -151,7 +156,7 @@ def logged_in(stub):
     assert(session.status != "0")
     assert(session.username)
 
-    threading.Thread(target=listen_to_stream, args=(stub,), daemon=True).start()
+    threading.Thread(target=listen_to_stream, args=(stub,)).start()
 
     while True:
         print('\nWelcome, ' + session.username + '!')
