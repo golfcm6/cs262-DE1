@@ -148,6 +148,8 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
 
     def delete_user(self, request, context):
         try:
+            # log out user so stream stops looking for messages
+            self.usernames[request.username] = 0
             # self.ds_lock.acquire()
             del self.usernames[request.username]
             if request.username in self.offline_messages:
@@ -160,6 +162,7 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
         return server_response
     
     def search_users(self, request, context):
+        server_response = ""
         for u in self.usernames:
             try:
                 if re.search(request.username_search, u):
@@ -173,7 +176,7 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
         else:
             server_response = "f"
         
-        ret_response = pb2.Status(status_result = server_response)
+        ret_response = pb2.Text_Returnable(content = server_response)
         return ret_response
         
             

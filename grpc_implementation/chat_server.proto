@@ -4,10 +4,6 @@ message User {
     string username = 1;
 }
 
-message Users {
-    repeated User users = 1;
-}
-
 message Text {
     string sender = 1;
     string receiver = 2;
@@ -16,10 +12,6 @@ message Text {
 
 message Text_Returnable {
     string content = 1;
-}
-
-message Texts {
-    repeated Text texts = 1;
 }
 
 message Status {
@@ -38,7 +30,7 @@ service Chat_Service {
     rpc create_user (User) returns (Status);
     rpc delete_user (User) returns (Status);
     rpc login (User) returns (Status);
-    rpc search_users (Search) returns (Users);
+    rpc search_users (Search) returns (Text_Returnable);
     rpc detect_disconnect (Status) returns (Void);
     rpc stream_chats (User) returns (stream Text_Returnable);
 }

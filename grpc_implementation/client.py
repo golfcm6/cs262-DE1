@@ -58,7 +58,7 @@ def login(stub):
             break
     print("logging in")
     login_req = pb2.User(username = existing_username)
-    
+
     login_status = stub.login(login_req)
 
     # check if login worked correctly
@@ -145,8 +145,8 @@ def account_search(stub):
     new_search = pb2.Search(username_search = regex_exp)
     server_response = stub.search_users(new_search)
 
-    if server_response.status_result[0] != "f":
-        print(server_response.status_result.split('|'))
+    if server_response.content[0] != "f":
+        print(server_response.content.split('|'))
     else:
         print("no results found")
 

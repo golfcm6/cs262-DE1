@@ -42,7 +42,7 @@ class Chat_ServiceStub(object):
         self.search_users = channel.unary_unary(
                 '/Chat_Service/search_users',
                 request_serializer=chat__server__pb2.Search.SerializeToString,
-                response_deserializer=chat__server__pb2.Users.FromString,
+                response_deserializer=chat__server__pb2.Text_Returnable.FromString,
                 )
         self.detect_disconnect = channel.unary_unary(
                 '/Chat_Service/detect_disconnect',
@@ -138,7 +138,7 @@ def add_Chat_ServiceServicer_to_server(servicer, server):
             'search_users': grpc.unary_unary_rpc_method_handler(
                     servicer.search_users,
                     request_deserializer=chat__server__pb2.Search.FromString,
-                    response_serializer=chat__server__pb2.Users.SerializeToString,
+                    response_serializer=chat__server__pb2.Text_Returnable.SerializeToString,
             ),
             'detect_disconnect': grpc.unary_unary_rpc_method_handler(
                     servicer.detect_disconnect,
@@ -258,7 +258,7 @@ class Chat_Service(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Chat_Service/search_users',
             chat__server__pb2.Search.SerializeToString,
-            chat__server__pb2.Users.FromString,
+            chat__server__pb2.Text_Returnable.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
