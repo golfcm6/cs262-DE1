@@ -14,6 +14,10 @@ message Text {
     string content = 3;
 }
 
+message Text_Returnable {
+    string content = 1;
+}
+
 message Texts {
     repeated Text texts = 1;
 }
@@ -29,11 +33,12 @@ message Search {
 message Void {}
 
 service Chat_Service {
+    rpc logout (User) returns (Status);
     rpc send_message (Text) returns (Status);
     rpc create_user (User) returns (Status);
     rpc delete_user (User) returns (Status);
     rpc login (User) returns (Status);
     rpc search_users (Search) returns (Users);
     rpc detect_disconnect (Status) returns (Void);
-    rpc stream_chats (Void) returns (stream Text);
+    rpc stream_chats (User) returns (stream Text_Returnable);
 }

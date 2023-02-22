@@ -3,8 +3,25 @@ import chat_server_pb2 as pb2
 import chat_server_pb2_grpc as pb2_grpc
 from concurrent import futures
 import sys
+import threading
 
-session_username = ""
+
+SERVER_FAILURE = "server offline, chat app dead :("
+client_home_msg = """
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout\n
+"""
+
+class Session:
+	def __init__(self, name, status):
+		self.username = name
+		self.status = status
+
+session = Session("", "0")
+
 
 def check_valid_username(u):
 	if not u or len(u) > 10 or " " in u or '|' in u:
@@ -13,6 +30,7 @@ def check_valid_username(u):
 	return True
 
 def create_username(stub):
+    global session
     while True:
         new_username = input("Enter a new username: ")
         if check_valid_username(new_username):
@@ -28,8 +46,12 @@ def create_username(stub):
     if create_status.status_result != "t":
         print("something went wrong")
         quickstart(stub)
+    else:
+        session.status = "1"
+        session.username = new_username
 
 def login(stub):
+    global session
     while True:
         existing_username = input("Enter your username: ")
         if check_valid_username(existing_username):
@@ -38,25 +60,28 @@ def login(stub):
     login_req = pb2.User(username = existing_username)
     login_status = stub.login(login_req)
 
-    print(login_status.status_result)
-
     # check if login worked correctly
+
+    # didn't work correctly, reroute to start
     if login_status.status_result [0] != "t":
         print("something went wrong")
         quickstart(stub)
 
-    # if worked correctly 
+    # worked correctly 
     else:
 		# set to active session
         print("logged in as " + existing_username + '\n')
         offline_messages = login_status.status_result [1:]
         
         print("offline messages: \n")
-    # TODO: figure out why empty dict is f lol
-    if offline_messages == 'f':
-        offline_messages = 'none'
+        if offline_messages == 'f':
+            offline_messages = 'none'
+        
         print(offline_messages)
-    
+        
+        session.username = existing_username
+        session.status = "1"
+        
 
 def quickstart(stub):
 	while True:
@@ -69,9 +94,62 @@ def quickstart(stub):
 			login(stub)
 			break
 
+def send_message(stub):
+    recipient = ""
+    while True:
+        recipient = input("Enter username to send message to: ")
+        if check_valid_username(recipient):
+            break
+
+    msg = input("Enter message to send: ")
+    complete_message = pb2.Text(sender = session.username, receiver = recipient, content = msg)
+    server_response = stub.send_message(complete_message)
+
+    if server_response.status_result != 't':
+        print(server_response.status_result)
+    else:
+        print('sent')
+
+def logout(stub):
+    logout_user = pb2.User(username = session.username)
+    server_response = stub.logout(logout_user)
+    assert(server_response.status_result == "t")
+
+def listen_to_stream(stub):
+    cur_user = pb2.User(username = session.username)
+
+    for el in stub.stream_chats(cur_user):
+        print(el.content)
+    
+    sys.exit()
+
+
+def logged_in(stub):
+    global session
+    assert(session.status != "0")
+    assert(session.username)
+
+    cur_user = pb2.User(username = session.username)
+    threading.Thread(target=listen_to_stream, args=(stub,), daemon=True).start()
+
+    while True:
+        print('\nWelcome, ' + session.username + '!')
+        message = input(client_home_msg)
+        match message:
+            case '2':
+                pass
+            case '3':
+                send_message(stub)
+            case '4':
+                delete_account(stub)
+            case 'exit':
+                logout(stub)
+                print('see ya')
+                sys.exit()
+
 
 def run():
-    global session_username
+    global session
     args = sys.argv[1:]
     assert len(sys.argv) == 2, f"provide host address"
     
@@ -83,6 +161,8 @@ def run():
         stub = pb2_grpc.Chat_ServiceStub(channel)
         print("client connected")
         quickstart(stub)
+
+        logged_in(stub)
 
 if __name__ == "__main__":
     run()

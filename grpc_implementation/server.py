@@ -12,9 +12,10 @@ import sys
 class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
     def __init__(self):
         # dictionary to track usernames
+        # u, s = username, status (either 0, "logged in")
         self.usernames = {}
 
-        # self.online = {}
+        self.online_messages = {}
 
         # dictionary to hold offline_messages to deliver once users log in
         # k, v = receiving username, {sender : list of messages they received from sender}
@@ -76,6 +77,66 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
         
         return_status = pb2.Status(status_result = server_response)
         return return_status
+    
+    def stream_chats(self, request, context):
+        # get the username
+        user_req = request.username
+
+        # continuously query
+        while True:
+            # if there are new messages uploaded to the 
+            if user_req in self.online_messages and len(self.online_messages[user_req]) > 0:
+                for key, value in list(self.online_messages[user_req].items()):
+                    formatted_msg = '*** new message from ' + key + '***\n' + str(value) + '\n***end message***'
+                    msg = pb2.Text_Returnable(content = formatted_msg)
+                    yield msg
+                    del self.online_messages[user_req][key]
+    
+    def send_message(self, request, context):
+        if request.receiver not in self.usernames:
+            server_response = pb2.Status(status_result = "recipient does not exist")
+            return server_response
+
+        self.ds_lock.acquire()
+
+        # user is logged in, add to DS holding online messages
+        if self.usernames[request.receiver] == "logged in":
+            # if user already exists in the DS
+            if request.receiver in self.online_messages:
+                # if there are existing messages from same sender undelivered
+                if request.sender in self.online_messages[request.receiver]:
+                    self.online_messages[request.receiver][request.sender].append(request.content)
+                else:
+                    self.online_messages[request.receiver][request.sender] = [request.content]
+            else:
+                self.online_messages[request.receiver] = {}
+                self.online_messages[request.receiver][request.sender] = [request.content]
+        # user not logged in
+        else:
+            # if user already exists in the DS
+            if request.receiver in self.offline_messages:
+                # if there are existing messages from same sender undelivered
+                if request.sender in self.offline_messages[request.receiver]:
+                    self.offline_messages[request.receiver][request.sender].append(request.content)
+                else:
+                    self.offline_messages[request.receiver][request.sender] = [request.content]
+            else:
+                self.offline_messages[request.receiver] = {}
+                self.offline_messages[request.receiver][request.sender] = [request.content]
+        self.ds_lock.release()
+        server_response = pb2.Status(status_result = "t")
+        return server_response
+    
+    def logout(self, request, context):
+        assert(request.username in self.usernames)
+        self.usernames[request.username] = 0
+        server_response = pb2.Status(status_result = "t")
+        return server_response
+            
+
+        
+                
+
 
 
 

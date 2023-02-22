@@ -14,6 +14,11 @@ class Chat_ServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.logout = channel.unary_unary(
+                '/Chat_Service/logout',
+                request_serializer=chat__server__pb2.User.SerializeToString,
+                response_deserializer=chat__server__pb2.Status.FromString,
+                )
         self.send_message = channel.unary_unary(
                 '/Chat_Service/send_message',
                 request_serializer=chat__server__pb2.Text.SerializeToString,
@@ -46,13 +51,19 @@ class Chat_ServiceStub(object):
                 )
         self.stream_chats = channel.unary_stream(
                 '/Chat_Service/stream_chats',
-                request_serializer=chat__server__pb2.Void.SerializeToString,
-                response_deserializer=chat__server__pb2.Text.FromString,
+                request_serializer=chat__server__pb2.User.SerializeToString,
+                response_deserializer=chat__server__pb2.Text_Returnable.FromString,
                 )
 
 
 class Chat_ServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def logout(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def send_message(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -99,6 +110,11 @@ class Chat_ServiceServicer(object):
 
 def add_Chat_ServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'logout': grpc.unary_unary_rpc_method_handler(
+                    servicer.logout,
+                    request_deserializer=chat__server__pb2.User.FromString,
+                    response_serializer=chat__server__pb2.Status.SerializeToString,
+            ),
             'send_message': grpc.unary_unary_rpc_method_handler(
                     servicer.send_message,
                     request_deserializer=chat__server__pb2.Text.FromString,
@@ -131,8 +147,8 @@ def add_Chat_ServiceServicer_to_server(servicer, server):
             ),
             'stream_chats': grpc.unary_stream_rpc_method_handler(
                     servicer.stream_chats,
-                    request_deserializer=chat__server__pb2.Void.FromString,
-                    response_serializer=chat__server__pb2.Text.SerializeToString,
+                    request_deserializer=chat__server__pb2.User.FromString,
+                    response_serializer=chat__server__pb2.Text_Returnable.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -143,6 +159,23 @@ def add_Chat_ServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class Chat_Service(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def logout(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Chat_Service/logout',
+            chat__server__pb2.User.SerializeToString,
+            chat__server__pb2.Status.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def send_message(request,
@@ -258,7 +291,7 @@ class Chat_Service(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/Chat_Service/stream_chats',
-            chat__server__pb2.Void.SerializeToString,
-            chat__server__pb2.Text.FromString,
+            chat__server__pb2.User.SerializeToString,
+            chat__server__pb2.Text_Returnable.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
