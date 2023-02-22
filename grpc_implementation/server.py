@@ -148,8 +148,6 @@ class Chat_ServiceServicer(pb2_grpc.Chat_ServiceServicer):
 
     def delete_user(self, request, context):
         try:
-            # log out user so stream stops looking for messages
-            self.usernames[request.username] = 0
             # self.ds_lock.acquire()
             del self.usernames[request.username]
             if request.username in self.offline_messages:

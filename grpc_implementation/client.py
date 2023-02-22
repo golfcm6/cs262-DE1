@@ -111,11 +111,22 @@ def send_message(stub):
     else:
         print('sent')
 
-def logout(stub):
+def logout(stub, forever):
     global session
     logout_user = pb2.User(username = session.username)
     server_response = stub.logout(logout_user)
     assert(server_response.status_result == "t")
+
+    if forever:
+        print("deleting user: " + session.username)
+
+        del_user = pb2.User(username = session.username)
+        server_response = stub.delete_user(del_user)
+
+        if server_response.status_result != "t":
+            print(server_response.status_result)
+        else:
+            print('Account successfully deleted. Goodbye!')
 
     session.username = ""
     session.status = "0"
@@ -130,6 +141,7 @@ def listen_to_stream(stub):
 def delete_account(stub):
     global session
     assert(session.username)
+    print("deleting user: " + session.username)
 
     del_user = pb2.User(username = session.username)
     server_response = stub.delete_user(del_user)
@@ -137,8 +149,8 @@ def delete_account(stub):
     if server_response.status_result != "t":
         print(server_response.status_result)
     else:
+        print(server_response.status_result)
         print('Account successfully deleted. Goodbye!')
-        sys.exit()
 
 def account_search(stub):
     regex_exp = input("Enter regex pattern to search through usernames: ")
@@ -167,9 +179,10 @@ def logged_in(stub):
             case '3':
                 send_message(stub)
             case '4':
-                delete_account(stub)
+                logout(stub, True)
+                sys.exit()
             case 'exit':
-                logout(stub)
+                logout(stub, False)
                 print('see ya')
                 sys.exit()
 
