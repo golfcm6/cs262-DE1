@@ -2,7 +2,6 @@
 import socket
 import select
 import sys
-import time
 
 SERVER_FAILURE = "server offline, chat app dead :("
 client_home_msg = """
