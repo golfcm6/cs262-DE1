@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+message User {
+    string username = 1;
+}
+
+message Users {
+    repeated User users = 1;
+}
+
+message Text {
+    string sender = 1;
+    string receiver = 2;
+    string content = 3;
+}
+
+message Texts {
+    repeated Text texts = 1;
+}
+
+message Status {
+    string status_result = 1;
+}
+
+message Search {
+    string username_search = 1;
+}
+
+message Void {}
+
+service Chat_Service {
+    rpc send_message (Text) returns (Status);
+    rpc create_user (User) returns (Status);
+    rpc delete_user (User) returns (Status);
+    rpc login (User) returns (Status);
+    rpc search_users (Search) returns (Users);
+    rpc detect_disconnect (Status) returns (Void);
+    rpc stream_chats (Void) returns (stream Text);
+}

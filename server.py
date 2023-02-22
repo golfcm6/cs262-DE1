@@ -15,7 +15,7 @@ usernames = {}
 # k, v = online socket, username - used for updating of username logged in status
 # when client badly disconnects
 online = {}
-# k, v = username, {sender : list of messages they received from sender}
+# k, v = receiving username, {sender : list of messages they received from sender}
 offline_messages = {}
 
 def offline(c):
@@ -27,7 +27,9 @@ def offline(c):
 		res = offline_messages[online[c]]
 
 	ds_lock.acquire()
-	offline_messages = {}
+
+	# delete offline messages for the user who just logged in since we're delivering the message now
+	offline_messages[online[c]] = {}
 	ds_lock.release()
 
 	return res
