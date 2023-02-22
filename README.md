@@ -14,6 +14,7 @@ Necessary packages:
 - select
 - conda install grpcio
 - conda install protobuf
+- grpcio-tools
 
 ## Instructions
 ### Custom Wire Protocol (Sockets)
@@ -26,4 +27,4 @@ at the root directory, run:
 in the "grpc_implementation" directory, run:
 - "python3 server.py [host ip]" to get the server up, kill with control c
 - in a different terminal window, run "python3 client.py [server host ip]" to get a client up, can follow instructions to exit cleanly or control c
-- for testing, run "./grpc_test.sh" - if you don't see any messages stating that a client failed, all tests have passed - if permission denied when running, run chmod a+rx grpc_test.sh - may see a gRPC Channel closed message, which is perfectly fine (happens when the bash script controls c the server at end of tests)
+- for testing, run "./grpc_test.sh" - if you don't see any messages stating that a client failed, all tests have passed - if permission denied when running, run chmod a+rx grpc_test.sh
