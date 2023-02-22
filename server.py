@@ -27,7 +27,6 @@ def offline(c):
 		res = offline_messages[online[c]]
 
 	ds_lock.acquire()
-
 	# delete offline messages for the user who just logged in since we're delivering the message now
 	offline_messages[online[c]] = {}
 	ds_lock.release()
@@ -38,17 +37,18 @@ def offline(c):
 # client end does input error handling properly
 def threaded(c):
 	global offline_messages
+	wire, message = None, None
 	while True:
 		client_input = c.recv(1024)
 		# client disconnect
 		if not client_input:
-			print('user: "' + str(online[c]) +  '" disconnected')
 			# must update user to be offline
 			if c in online:
 				ds_lock.acquire()
 				# if its not in usernames, means user just deleted account and then disconnected
 				if online[c] in usernames:
 					usernames[online[c]] = 0
+				print('user: "' + str(online[c]) + '" disconnected')
 				del online[c]
 				ds_lock.release()
 
@@ -129,7 +129,7 @@ def threaded(c):
 						# send message to the socket recipient is currently logged in at
 						try:
 							usernames[recipient].send(formatted_msg.encode('ascii'))
-							print('sent')
+							print('sent online message: ' + formatted_msg)
 							server_response = 't'
 						except Exception as _:
 							server_response = 'server error in sending message to online user, try again'

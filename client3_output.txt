@@ -1,0 +1,36 @@
+Enter c to create a new username or u to log in to existing account: Enter your username: username does not exist
+Enter c to create a new username or u to log in to existing account: Enter your username: logged in as ash
+
+offline messages: 
+
+none
+
+Welcome, ash!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+Enter username to send message to: Enter message to send: sent
+
+Welcome, ash!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+Enter username to send message to: Enter message to send: recipient does not exist
+
+Welcome, ash!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+Account successfully deleted. Goodbye!

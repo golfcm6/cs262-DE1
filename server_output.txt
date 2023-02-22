@@ -1,0 +1,41 @@
+socket binded to port 49153
+socket is listening
+Connected to : 127.0.0.1 : 49182
+t
+sent
+Connected to : 127.0.0.1 : 49183
+already logged in
+sent
+t
+sent
+ash
+sent
+f
+sent
+regex erro
+sent
+sent online message: *** new message from charles***
+hello!
+***end message***
+t
+sent
+ash|charles
+sent
+user: "charles" disconnected
+user: "ash" disconnected
+Connected to : 127.0.0.1 : 49184
+username does not exist
+sent
+tf
+sent
+t
+sent
+recipient does not exist
+sent
+t
+sent
+user: "ash" disconnected
+Connected to : 127.0.0.1 : 49185
+t{'ash': ['goodbye']}
+sent
+user: "charles" disconnected

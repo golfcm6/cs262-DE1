@@ -1,0 +1,15 @@
+Enter c to create a new username or u to log in to existing account: Enter your username: logged in as charles
+
+offline messages: 
+
+{'ash': ['goodbye']}
+
+Welcome, charles!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+see ya

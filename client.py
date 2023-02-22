@@ -2,6 +2,7 @@
 import socket
 import select
 import sys
+import time
 
 SERVER_FAILURE = "server offline, chat app dead :("
 client_home_msg = """
@@ -187,6 +188,7 @@ def logged_in(s):
 
 			else:
 				print('\nWelcome, ' + session.username + '!')
+				# try:
 				message = input(client_home_msg)
 
 				match message:
@@ -199,6 +201,9 @@ def logged_in(s):
 					case 'exit':
 						print('see ya')
 						sys.exit()
+				# except:
+				# 	# EOF error from unit testing, sleep for the unit test
+				# 	time.sleep(10)
 
 def main():
 	args = sys.argv[1:]

@@ -1,0 +1,62 @@
+Enter c to create a new username or u to log in to existing account: Enter your username: already logged in
+Enter c to create a new username or u to log in to existing account: Enter a new username: logged in as charles
+
+Welcome, charles!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+Enter regex pattern to search through usernames: ['ash']
+
+Welcome, charles!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+Enter regex pattern to search through usernames: no results found
+
+Welcome, charles!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+Enter regex pattern to search through usernames: ['regex erro']
+
+Welcome, charles!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+Enter username to send message to: Enter message to send: sent
+
+Welcome, charles!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+Enter regex pattern to search through usernames: ['ash', 'charles']
+
+Welcome, charles!
+
+Enter:
+2    --> regex search for accounts
+3    --> send message
+4    --> delete account
+exit --> logout
+
+see ya
